@@ -19,3 +19,9 @@ A basic bash script that installs the Apache web server software called install-
 Your challenge
 
 Configure a Linux Compute Engine instance that installs the Apache web server software using a remote startup script. In order to confirm that a compute instance Apache has successfully installed, the Compute Engine instance must be accessible via HTTP from the internet. You must create your instance in the following zone: europe-west1-b.
+
+Task 1. Create a storage bucket and copy the startup script
+
+Task 2. Create a VM instance with a remote startup script
+
+Task 3. Create a firewall rule to allow traffic (80/tcp)
