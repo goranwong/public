@@ -1,0 +1,21 @@
+GSP301 : Deploy a Compute Instance with a Remote Startup Script: Challenge Lab
+
+Overview
+In a challenge lab you’re given a scenario and a set of tasks. Instead of following step-by-step instructions, you will use the skills learned from the labs in the course to figure out how to complete the tasks on your own! An automated scoring system (shown on this page) will provide feedback on whether you have completed your tasks correctly.
+
+When you take a challenge lab, you will not be taught new Google Cloud concepts. You are expected to extend your learned skills, like changing default values and reading and researching error messages to fix your own mistakes.
+
+To score 100% you must successfully complete all tasks within the time period!
+
+This lab is recommended for students enrolled in the Cloud Architecture: Design, Implement, and Manage skill badge. It also supports preparing for the Google Cloud Certified Professional Cloud Architect certification exam. Are you up for the challenge?
+
+
+Challenge scenario
+
+You have been given the responsibility of managing the configuration of your organization's Google Cloud virtual machines. You have decided to make some changes to the framework used for managing the deployment and configuration machines. You want to make it easier to modify the startup scripts used to initialize a number of the compute instances. Instead of storing startup scripts directly in the instances' metadata, you decided to store them in a Cloud Storage bucket. You will then configure the virtual machines to reference the script file in the bucket.
+
+A basic bash script that installs the Apache web server software called install-web.sh has been provided for you as a sample startup script. You can download this from the Student Resources links. You can also find the startup script in a public Cloud Storage bucket at gs://spls/gsp301/install-web.sh.
+
+Your challenge
+
+Configure a Linux Compute Engine instance that installs the Apache web server software using a remote startup script. In order to confirm that a compute instance Apache has successfully installed, the Compute Engine instance must be accessible via HTTP from the internet. You must create your instance in the following zone: europe-west1-b.
