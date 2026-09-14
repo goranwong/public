@@ -1,0 +1,33 @@
+---
+- block: 
+    - name: "{{ target_action }} all containers"
+      shell: "{{ podman_cmd }} {{ target_action }} {{ item.id }} {{ item.name }}"
+      loop: "{{ container_info }}"
+    
+    - name: Check containers status
+      shell: podman ps | grep -E 'bbp_(tfrm|im)_.*_(postgres|redis|webserver|worker|core)_(30|31)$' | wc -l
+      register: count
+      
+    - name: Verify if containers are successfully started / stopped.
+      fail:
+        msg: "Containers failed to {{ target_action }} "
+      when: >
+        (target_action == 'stop' and count.stdout|int > 0) or
+        (target_action == 'start' and count.stdout|int != 10)
+  when: target_container == 'ALL'  
+
+- block: 
+    - name: "{{ target_action }} {{ target_container | upper }} containers"
+      shell: "{{ podman_cmd }} {{ target_action }} {{ container_info | selectattr('name', 'equalto', target_container) | map(attribute='id') | first }} {{ target_container }}"
+              
+    - name: Check containers status
+      shell: podman ps | grep -E 'bbp_{{ target_container }}_.*_(postgres|redis|webserver|worker|core)_(30|31)$' | wc -l
+      register: count
+      
+    - name: Verify if containers are successfully started / stopped.
+      fail:
+        msg: "{{ target_container }} failed to {{ target_action }}"
+      when: >
+        (target_action == 'stop' and count.stdout|int > 0) or
+        (target_action == 'start' and count.stdout|int != 5)
+  when: target_container != 'ALL' and target_container != 'etl'

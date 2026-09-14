@@ -1,0 +1,46 @@
+- name: "start / stop listening port"
+  gather_facts: False
+  become: true
+  hosts: "{{ target_server }}"
+  tasks:
+    - block:
+        - name: stop / start listening port
+          shell: "sudo systemctl {{ target_action }} DNS-Port-Monitoring"
+      
+        - name: pause for 10 seconds
+          pause:
+            seconds: 10
+      
+        - name: get listening port status
+          shell: "sudo systemctl status DNS-Port-Monitoring"
+          register: status
+          failed_when:
+            - (target_action == "start" and '"active (running)" not in status.stdout')
+            - (target_action == "stop" and '"failed" not in status.stdout')
+        - debug:
+            msg: "{{ status.stdout }}"
+      when: target_action != "no_action"
+
+## To enable or disable listening port if target_option is not enable or disable
+
+    - block:
+        - name: check if DNS-Port-Monitoring is enabled / disabled
+          shell: "sudo systemctl is-enabled DNS-Port-Monitoring | sed 's/.$//'"
+          register: enabled
+          ignore_errors: yes
+        - debug:
+            msg: "DNS-Port-Monitoring is currently {{ enabled.stdout }}d"   
+      
+        - name: enable / disable DNS-Port-Monitoring service
+          command: "systemctl {{ target_option }} DNS-Port-Monitoring"
+          when: enabled.stdout != target_option 
+          
+        - name: check if DNS-Port-Monitoring is enabled / disabled successfully
+          shell: "sudo systemctl is-enabled DNS-Port-Monitoring | sed 's/.$//'"
+          register: result
+          ignore_errors: yes
+        - debug:
+            msg: "DNS-Port-Monitoring service is {{ result.stdout }}d"
+          failed_when: result.stdout != target_option
+     
+      when: target_option != "no_action"

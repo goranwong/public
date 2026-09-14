@@ -1,0 +1,38 @@
+# ======================================================================
+# Author:               Goran Wong
+# Description:          Start / Stop template for BBP
+# Version:              v3
+# First Draft:          2026-06-09
+# last update:          2026-06-09
+# ----------------------------------------------------------------------
+# Survey Variables:
+# - target_action (start / stop application) 
+# - target_server 
+# ======================================================================
+---
+- name: Start/Stop applications for BBP
+  hosts: "{{ target_server }}"
+  become: true
+  become_method: sudo
+  become_flags: -i
+  become_user: bbprun
+  gather_facts: false
+  vars: 
+    podman_cmd: "/opt/app/bbp/bin/podmanlauncher"
+    container_info:
+        - { id: 30, name: tfrm }
+        - { id: 31, name: im }
+  tasks:
+    - name: condition check
+      fail: 
+        msg: "BBP-ETL is not available in {{ target_server }}."
+      when: (inventory_hostname in ['clvmsp2001'] or inventory_hostname in ['clvmsp3001']) and (target_container == 'etl')
+      
+    - include_tasks: tasks/bbp.yaml
+      when: inventory_hostname in ['clvmsp2001'] or inventory_hostname in ['clvmsp3001']
+
+    - include_tasks: tasks/bbp-etl.yaml
+      when: inventory_hostname in ['clvmsp2011'] or inventory_hostname in ['clvmsp3011']
+     
+
+

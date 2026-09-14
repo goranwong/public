@@ -1,0 +1,19 @@
+---
+- name: "{{ target_action }} airflow "
+  vars:
+    podman_compose_cmd: "podman-compose -f /opt/app/fnbs/apps/fnbs-airflow/docker-compose-airflow.yml"
+  shell: "{{ podman_compose_cmd }} {{ 'up -d' if target_action == 'start' else 'down' }}"
+
+- name: Get process count
+  shell: podman ps | grep fnbs | wc -l
+  register: count
+  changed_when: false
+
+- name: verify if airflow is started / stopped successfully
+  fail:
+    msg: "airflow is failed to {{ target_action }}. Process count : {{ count.stdout }}"
+  when: >
+   (target_action == 'stop' and count.stdout|int > 0) or
+   (target_action == 'start' and count.stdout|int != 5)
+    
+

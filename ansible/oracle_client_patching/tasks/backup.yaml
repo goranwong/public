@@ -1,0 +1,16 @@
+- name: Ensure backup directory exists
+  file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Backup {{ oracle_base }} to {{ backup_dir }}
+  shell: |
+    tar -zcvPf "{{ backup_dir }}/oracle_client_$(date +%Y%m%d).tar.gz" "{{ oracle_base }}"
+
+- name: Verify backup tar files
+  shell: ls -1rt "{{ backup_dir }}/oracle_client_$(date +%Y%m%d).tar.gz"
+  register: backup_file
+- debug:
+    msg: "{{ backup_file.stdout }}"
+

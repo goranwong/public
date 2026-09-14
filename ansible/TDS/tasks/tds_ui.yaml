@@ -1,0 +1,27 @@
+---
+## To stop TDS UI
+- block:
+    - name: shutdown TDS UI 
+      shell: /opt/app/TDS/deploy/TDS_ui_services/scripts/stopTDSServices.sh
+      register: stop_ui
+    - debug:
+        msg: "{{ stop_ui.stdout }}"
+      failed_when: "'TDS Web Server is stopped' not in stop_ui.stdout"
+      
+  when: target_action == "stop"
+  
+## To start TDS UI
+- block:
+    - name: startup TDS UI 
+      shell: /opt/app/TDS/deploy/TDS_ui_services/scripts/noHupTDSServices.sh
+      register: start_ui
+    - debug:
+        msg: "{{ start_ui.stdout }}"
+    
+    - name: verify if UI services is sucessfully started.
+      shell: ps -elf | grep -i "TDS_ui_services" | grep -v grep | wc -l
+      register: ui_count
+      failed_when: ui_count.stdout | int != 2  
+
+  when: target_action == "start"
+  

@@ -1,0 +1,37 @@
+# ======================================================================
+# Author:               Goran Wong
+# Description:          Start / Stop template for FNBS
+# Version:              v3
+# First Draft:          2025-06-19
+# last update:          2025-06-26
+# ----------------------------------------------------------------------
+# Survey Variables:
+# - target_action (start / stop application) 
+# - target_server 
+# ======================================================================
+---
+- name: Start/Stop applications for fnbs
+  hosts: "{{ target_server }}"
+  become: true
+  become_method: sudo
+  become_flags: -i
+  become_user: fnbsrun
+  gather_facts: false
+  tasks:
+
+    - include_tasks: tasks/{{target_service}}.yaml
+      when: target_service != 'ALL'
+
+    - block:
+       - include_tasks: tasks/refdata-service.yaml
+       - include_tasks: tasks/fnbs-ae-etl.yaml
+       - include_tasks: tasks/fnbs-starter.yaml
+       - include_tasks: tasks/fnbs-ui.yaml   
+       - include_tasks: tasks/fnbs-report.yaml  
+       - include_tasks: tasks/fnbs-rws.yaml  
+       - include_tasks: tasks/fnbs-tools.yaml  
+       - include_tasks: tasks/airflow.yaml  
+      when: "target_service == 'ALL'"
+     
+
+

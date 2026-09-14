@@ -1,0 +1,26 @@
+---
+# To stop nifi
+- block:
+    - name: shutdown nifi 
+      shell: /opt/app/tds/deploy/tardis_actual/scripts/nifi.sh {{ target_action }}
+      register: stop_nifi
+    - debug:
+        msg: "{{ stop_nifi.stdout }}"
+      failed_when: "'Stopped the nifi' not in stop_nifi.stdout"
+      
+  when: target_action == "stop"
+  
+## To start nifi
+- block:
+    - name: startup nifi 
+      shell: /opt/app/tds/deploy/tardis_actual/scripts/nifi.sh {{ target_action }}
+      register: nifi
+    - debug:
+        msg: "{{ nifi.stdout }}"
+
+    - name: verify if nifi is sucessfully started.
+      shell: podman ps | grep -i nifi| wc -l
+      register: nifi_count
+      failed_when: nifi_count.stdout | int !=1
+      
+  when: target_action == "start"

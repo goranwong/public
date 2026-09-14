@@ -1,0 +1,27 @@
+# task to start and stop guard airflow
+---
+- name: start / stop airflow
+  become: true
+  become_user: "{{ run_account }}"
+  shell: cd /opt/app/rhs/home/{{ run_account }}/rwh && ./{{ target_action }}.sh
+  register: airflow
+- debug: 
+    msg: "{{ airflow.stdout }}"
+    
+- name: wait for 15 seconds before checking airflow process count
+  pause:
+    seconds: 15
+
+- name: get airflow process count
+  shell: ps -elf | grep airflow | grep -v grep | wc -l
+  register: airflow_count
+
+- name: airflow is failed to stop
+  fail:
+    msg: "airflow failed to stop. "
+  when: ("airflow is stopped" not in airflow.stdout) and (target_action == "stop")
+
+- name: airflow is failed to start
+  fail:
+    msg: "airflow is failed to start. process count is {{airflow_count.stdout}}."
+  when: (airflow_count.stdout | int == 0 ) and (target_action == "start")

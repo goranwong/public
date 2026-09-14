@@ -1,0 +1,25 @@
+---
+- name: TDS - Stop / Start application
+  hosts: "{{ target_server }}"
+  become: true
+  become_user: tdsrun
+  gather_facts: False
+  tasks:
+    - include_tasks: tasks/airflow.yaml
+      when: "target_service == 'airflow'"
+
+    - include_tasks: tasks/nifi.yaml
+      when: "target_service == 'nifi'"
+
+    - include_tasks: tasks/tds_bt.yaml
+      when: "target_service == 'tds_bt'"
+
+    - include_tasks: tasks/tds_ui.yaml
+      when: "target_service == 'tds_ui'"
+
+    - block:
+        - include_tasks: tasks/airflow.yaml
+        - include_tasks: tasks/nifi.yaml
+        - include_tasks: tasks/tds_bt.yaml
+        - include_tasks: tasks/tds_ui.yaml    
+      when: "target_service == 'ALL'"

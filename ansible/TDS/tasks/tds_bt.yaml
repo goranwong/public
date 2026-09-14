@@ -1,0 +1,30 @@
+---
+## To stop TDS BT Service
+- block:
+    - name: shutdown TDS BT service 
+      shell: /opt/app/tds/deploy/bt_services/scripts/stopTDSServices.sh
+      register: stop_bt
+    - debug:
+        msg: "{{ stop_bt.stdout }}"
+      failed_when: "'TDS Web Server is stopped' not in stop_bt.stdout"
+      
+  when: target_action == "stop"
+  
+## To start TDS BT Service
+- block:
+    - name: startup TDS BT service 
+      shell: /opt/app/tds/deploy/bt_services/scripts/noHupTDSServices.sh
+      register: start_bt
+    - debug:
+        msg: "{{ start_bt.stdout }}"
+
+    - name: Sleeping for 2 minutes
+      pause:
+        seconds: 130
+
+    - name: verify if BT services is sucessfully started.
+      shell: ps -elf | grep -i "bt_service" | grep -v grep | wc -l
+      register: bt_count
+      failed_when: bt_count.stdout | int != 2   
+      
+  when: target_action == "start"

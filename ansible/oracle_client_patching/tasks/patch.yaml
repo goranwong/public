@@ -1,0 +1,155 @@
+- name: get oracle home
+  become: true
+  become_flags: -i
+  become_user: "{{ run_account }}"
+  shell: echo $ORACLE_HOME
+  register: oracle_home
+  changed_when: false
+
+- name: Check if OPatch source file exists on NFS
+  stat:
+    path: "{{ opatch_file }}"
+  register: opatch_found
+
+- name: Fail if OPatch source file not found
+  fail:
+    msg: "OPatch source file not found."
+  when: not opatch_found.stat.exists
+
+- name: Get current OPatch version
+  become: true
+  become_flags: -i
+  become_user: "{{ run_account }}"
+  shell: |
+    {{ oracle_home.stdout | trim }}/OPatch/opatch version | awk -F': ' '/OPatch Version/{print $2}'
+  register: current_opatch_version
+  failed_when: false
+  changed_when: false
+  
+- name: Get source OPatch version
+  shell: |
+    unzip -p {{ opatch_file }} OPatch/version.txt | head -1
+  register: source_opatch_version
+  changed_when: false
+  
+- name: Skip if same version
+  debug:
+    msg: >
+      Existing OPatch version {{ current_opatch_version.stdout }}
+      matches source version {{ source_opatch_version.stdout }}
+  when:
+    - current_opatch_version.rc == 0
+    - current_opatch_version.stdout | trim == source_opatch_version.stdout | trim
+
+- name: Remove existing OPatch if outdated
+  become: true
+  become_flags: -i
+  become_user: "{{ run_account }}"
+  file:
+    path: "{{ oracle_home.stdout | trim }}/OPatch"
+    state: absent
+  when:
+    - current_opatch_version.stdout | trim != source_opatch_version.stdout | trim
+
+- name: Unzip updated OPatch if version is newer
+  become: true
+  become_flags: -i
+  become_user: "{{ run_account }}"
+  unarchive:
+    src: "{{ opatch_file }}"
+    dest: "{{ oracle_home.stdout | trim }}"
+    remote_src: true
+  when:
+    - current_opatch_version.stdout | trim != source_opatch_version.stdout | trim
+
+- name: verify patch list
+  debug:
+    msg: "patch_id_list='{{ patch_id_list | default('') }}'"
+
+- name: set patch ID
+  set_fact:
+    patch_ids: "{{ (patch_id_list | default('') | trim).split() }}"
+
+- name: Verify patch ID
+  debug:
+    var: patch_ids
+
+- name: Show target patch
+  debug:
+    msg: "patch path: {{ patch_dir }}/{{ item }}/{{item}}"
+  loop: "{{ patch_ids }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Run OPatch apply for each patch ID
+  become: true
+  become_user: "{{ run_account }}"
+  shell: >
+    "{{ oracle_home.stdout | trim }}/OPatch/opatch" apply -silent -oh "{{ oracle_home.stdout | trim }}" -local
+  args:
+    chdir: "{{ patch_dir }}/{{ item }}/{{ item }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home.stdout }}"
+    PATH: "{{ oracle_home.stdout | trim }}/OPatch:{{ ansible_env.PATH }}"
+  register: patch_result
+  changed_when: >
+    
+    'opatch succeeded'
+    in (
+      (
+        (patch_result.stdout | default(''))
+        + (patch_result.stderr | default(''))
+      ) | lower
+    )
+
+  failed_when: >
+    'opatch succeeded'
+    not in (
+      (
+        (patch_result.stdout | default(''))
+        + (patch_result.stderr | default(''))
+      ) | lower
+    )  
+   
+  loop: "{{ patch_ids }}"
+  loop_control:
+    label: "{{ item }}"
+
+- name: Verify patch is applied
+  become: true
+  become_user: "{{ run_account }}"
+  shell: |
+    set -o pipefail
+    "{{ oracle_home.stdout | trim }}/OPatch/opatch" lsinventory | grep -E "(^Patch.*applied)|(^Sub-patch)"
+  args:
+    executable: /bin/bash
+  environment:
+    ORACLE_HOME: "{{ oracle_home.stdout | trim }}"
+    PATH: "{{ oracle_home.stdout | trim }}/OPatch:{{ ansible_env.PATH }}"
+  register: result
+
+- name: Display patching result
+  debug:
+    msg: "{{ result.stdout }}"
+
+
+- name: Email patching result
+  become: true
+  become_user: "{{ run_account }}"
+  shell: |
+    echo -e "Oracle Client Patching Result:\n\nHost: {{ inventory_hostname }}\nPatch Applied:\n--------------------------\n{{ result.stdout | default('patch not applied') }}\n--------------------------" \
+    | mailx -s "{{ inventory_hostname }} : Oracle Client Patching Completed " {{ email_to }}
+  when:
+    - email_to is defined
+    - email_to | length > 0
+
+- name: Unmount NFS source after patching finished
+  command: /bin/umount "{{ source_base_dir }}"
+  become: true
+when: "source == 'NFS'"
+
+- name: Remove /tmp/oracle soft link
+  file:
+    path: /tmp/oracle
+    state: absent
+when: "source == 'local'"

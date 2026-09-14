@@ -1,0 +1,22 @@
+---
+- name: Oracle client patching
+  hosts: "{{ target_server }}"
+  become: true
+  vars:
+    nfs_server: "172.100.1.231"
+    nfs_export: "/export/ansible/ORAPATCH"
+    source_base_dir: "/tmp/oracle"
+    patch_dir: "{{ source_base_dir }}/Linux_x86_64/19.0.0.0.0"
+    opatch_file: "{{ patch_dir }}/OPatch/p6880880_190000_Linux-x86-64.zip"
+ 
+  tasks:
+  
+    - block:
+        - include_tasks: tasks/mount.yaml
+      when: "source == 'NFS'"
+ 
+    - name: backup existing oracle_base folder
+      include_tasks: tasks/backup.yaml
+      
+    - name: Apply patch
+      include_tasks: tasks/patch.yaml

@@ -1,0 +1,55 @@
+# ======================================================================
+# Author:               Goran Wong
+# Description:          BBP Start / Stop template 
+# Version:              v3
+# First Draft:          2026-06-08
+# last update:          2026-08-31
+# ----------------------------------------------------------------------
+# Survey Variables:
+# - target_action (start / stop application) 
+# - target_server 
+# ======================================================================
+---
+- name: Start/Stop podman containers
+  hosts: "{{ target_server }}"
+  become: true
+  become_method: sudo
+  become_flags: -i
+  become_user: bbprun
+  gather_facts: false
+  vars: 
+    podman_cmd: "/opt/app/bbp/bin/podmanlauncher"
+    container_info:
+      - { id: 30, name: tfrm }
+      - { id: 31, name: im }
+      - { id: 60, name: etl }     
+
+  tasks:
+  
+   - block: 
+       - name: "{{ target_action }} all containers"
+         shell: "{{ podman_cmd }} {{ target_action }} {{ item.id }} {{ item.name }}"
+         loop: "{{ container_info }}"
+       
+       - name: Verify if containers are successfully started / stopped.
+         shell: podman ps | grep -E 'bbp_(tfrm|im)_.*_(postgres|redis|webserver|worker|core)_(30|31)$' | wc -l
+         register: count
+         failed_when:
+           (target_action == 'stop' and count.stdout|int > 0) or
+           (target_action == 'start' and count.stdout|int != 10)
+     when: target_container == 'ALL'  
+    
+   - block: 
+       - name: "{{ target_action }} {{ target_container | upper }} containers"
+         shell: "{{ podman_cmd }} {{ target_action }} {{ container_info | selectattr('name', 'equalto', target_container) | map(attribute='id') | first }} {{ target_container }}"
+         when: target_container != 'ALL'   
+           
+       - name: Verify if {{ target_container | upper }} containers are successfully started / stopped.
+         shell: podman ps | grep -E 'bbp_{{ target_container }}_.*_(postgres|redis|webserver|worker|core)_(30|31)$' | wc -l
+         register: count
+         failed_when:
+           (target_action == 'stop' and count.stdout|int > 0) or
+           (target_action == 'start' and count.stdout|int != 5)
+     when: target_container != 'ALL'
+
+

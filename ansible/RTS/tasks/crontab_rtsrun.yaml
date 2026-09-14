@@ -1,0 +1,15 @@
+# task to disable / enable crontab for patching
+---
+- name: Disable crontab for trsrun
+  shell: |
+    if ! crontab -l 2>/dev/null | grep -q '^#(ANSIBLE):'; then
+      crontab -l | sed 's/^/#(ANSIBLE):/g' | crontab
+    fi
+when: target_action == "stop"
+
+- name: Enable crontab for rtsrun
+  shell: |
+    if crontab -l 2>/dev/null | grep -q '#(ANSIBLE):'; then
+      crontab -l | sed 's/#(ANSIBLE)://g' | crontab
+    fi
+when: target_action == "start"

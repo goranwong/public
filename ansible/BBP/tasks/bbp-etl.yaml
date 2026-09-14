@@ -1,0 +1,27 @@
+---
+- name: "{{ target_action }} BBP-ETL service"
+  vars: 
+    etl_container_info:
+      - { id: 60, name: etl }     
+  shell: "{{ podman_cmd }} {{ target_action }} {{ item.id }} {{ item.name }}"
+  loop: "{{ etl_container_info }}"
+  
+- name: Pause for 30 seconds
+  pause: 
+    seconds: 30
+  when: target_action == "start"    
+      
+- name: Check BBP-ETL health endpoint
+  shell: curl -k https://localhost:8060/health
+  register: result
+  ignore_errors: true
+ 
+- name: Verify BBP-ETL Status
+  fail:
+    msg: "BBP ETL failed to {{ target_action }}"
+  when: >
+    (target_action == 'stop' and result.rc == 0) or
+    (target_action == 'start' and (
+        result.rc != 0 or
+        ((result.stdout | default('{}') | from_json).metadatabase.status != 'healthy')
+    ))

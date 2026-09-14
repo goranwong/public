@@ -1,0 +1,22 @@
+# task to start and stop risk-weight-service
+---
+- name: stop risk-weight-service
+  shell: /opt/app/fnbs/apps/refdata-service/bin/stop-risk-weight-service.sh
+  register: status
+  failed_when: >
+    ('gracefully terminated' not in status.stdout) and ('Nothing to stop' not in status.stdout)
+when: target_action == "stop"
+    
+- block:
+  - name: start risk-weight-service
+    shell: /opt/app/fnbs/apps/refdata-service/bin/start-risk-weight-service.sh
+
+  - name: Get process count
+    shell: ps -elf | grep -i refdata-service | grep -v grep | wc -l
+    register: count
+  
+  - name: Fail if risk-weight-service did not start   
+    fail:
+      msg: "risk-weight-service failed to start. Process count : {{ count.stdout }}"
+    when: count.stdout | int == 0
+  when: target_action == "start"

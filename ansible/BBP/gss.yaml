@@ -1,0 +1,62 @@
+- name: "start / stop listening port"
+  gather_facts: false
+  become: true
+  hosts: "{{ target_server }}"
+  tasks:
+    - name: set listening_port value based on selected GSS name
+      set_fact:
+        listening_port: "{{ '9000' if gss == 'bbp.int.ca' else '9001' if gss == 'bbpim.int.ca'}}"
+
+    - name: fail if listening_port is not found
+      fail:
+        msg: "listening port not found"
+      when: listening_port | trim == ''
+
+    - name: show the selected listening_port value
+      debug: 
+        msg: "listening_port of {{ gss }} is {{ listening_port }}"
+
+    - block:
+        - name: stop / start listening port
+          shell: "sudo systemctl {{ target_action }} GSS-Port-Monitoring@{{ listening_port }}"
+
+        - name: pause for 10 seconds
+          pause:
+            seconds: 10
+
+        - name: get listening port status
+          shell: "sudo systemctl status GSS-Port-Monitoring@{{ listening_port }}"
+          register: status
+          failed_when:
+            - (target_action == "start" and '"active (running)" not in status.stdout')
+            - (target_action == "stop" and '"failed" not in status.stdout')
+
+        - debug:
+            msg: "{{ status.stdout }}"
+      when: target_action != "no_action"
+
+    
+##  To enable or disable listening port if target_option is not enable or disable
+    
+    - block:
+        - name: check if GSS-Port-Monitoring is enabled / disabled
+          shell: "sudo systemctl is-enabled GSS-Port-Monitoring@{{ listening_port }} | sed 's/.$//'"
+          register: enabled
+          ignore_errors: yes
+        - debug:
+            msg: "GSS-Port-Monitoring@{{ listening_port }} is currently {{ enabled.stdout }}d"   
+    
+        - name: enable / disable GSS-Port-Monitoring@{{ listening_port }}
+          command: "systemctl {{ target_option }} GSS-Port-Monitoring@{{ listening_port }}"
+          when: enabled.stdout != target_option 
+        
+        - name: check if GSS-Port-Monitoring@{{ listening_port }} is enabled / disabled successfully
+          shell: "sudo systemctl is-enabled GSS-Port-Monitoring@{{ listening_port }} | sed 's/.$//'"
+          register: result
+          ignore_errors: yes
+        - debug:
+            msg: "GSS-Port-Monitoring@{{ listening_port }} is {{ result.stdout }}d"
+          failed_when: result.stdout != target_option
+    
+      when: target_option != "no_action"
+

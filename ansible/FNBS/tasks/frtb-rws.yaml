@@ -1,0 +1,24 @@
+# task to start and stop fnbs-rws
+---
+
+- name: stop fnbs-rws
+  shell: /opt/app/fnbs/apps/fnbs-rws/bin/stop.sh
+  ignore_errors: yes
+  register: status
+  failed_when: >
+    ('gracefully terminated' not in status.stdout) and ('Nothing to stop' not in status.stdout)
+when: target_action == "stop"
+    
+- block:
+  - name: start fnbs-rws
+    shell: /opt/app/fnbs/apps/fnbs-rws/bin/start.sh
+
+  - name: Get process count
+    shell: ps -elf | grep -i fnbs-rws | grep -v grep | wc -l
+    register: count
+  
+  - name: Fail if fnbs-rws did not start   
+    fail:
+      msg: "fnbs-rws failed to start. Process count : {{ count.stdout }}"
+    when: count.stdout | int == 0
+  when: target_action == "start"

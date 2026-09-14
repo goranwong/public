@@ -1,0 +1,21 @@
+# task to disable / enable monitoring
+---
+- name: Disable sumrf monitoring
+  become: true
+  become_method: sudo
+  become_user: smurf
+  shell: |
+    if ! crontab -l 2>/dev/null | grep -q '^#(ANSIBLE):'; then
+      crontab -l | sed 's/^/#(ANSIBLE):/g' | crontab
+    fi
+when: target_action == "stop"
+
+- name: Enable smurf monitoring
+  become: true
+  become_method: sudo
+  become_user: smurf
+  shell: |
+    if crontab -l 2>/dev/null | grep -q '#(ANSIBLE):'; then
+      crontab -l | sed 's/#(ANSIBLE)://g' | crontab
+    fi
+when: target_action == "start"

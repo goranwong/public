@@ -1,0 +1,29 @@
+---
+- block:
+    - name: shutdown airflow 
+      shell: /opt/app/tds/deploy/TDS_core/orchestration/scripts/stopAirflow.sh
+      register: stop_airflow
+    - debug:
+        msg: "{{ stop_airflow.stdout }}"
+        
+    - name: verify if airflow is sucessfully stopped.
+      shell: podman ps | grep -i airflow| wc -l
+      register: airflow_count
+      failed_when: "'TDS Airflow is down' not in stop_airflow.stdout"
+
+  when: target_action == "stop"
+  
+## To start airflow
+- block:
+    - name: start/restart airflow 
+      shell: /opt/app/tds/deploy/TDS_core/orchestration/scripts/docker_ssh.sh
+      register: start_airflow
+    - debug:
+        msg: "{{ start_airflow.stdout }}"
+
+    - name: verify if airflow is sucessfully started.
+      shell: podman ps | grep -i airflow| wc -l
+      register: airflow_count
+      failed_when: airflow_count.stdout | int != 6
+      
+  when: target_action == "start"

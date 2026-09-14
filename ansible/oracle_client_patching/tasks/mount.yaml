@@ -1,0 +1,41 @@
+# 1. Check if already mounted 
+- name: Check if {{ source_base_dir }} is already a mountpoint
+  command: /bin/mountpoint -q "{{ source_base_dir }}"
+  register: mountpoint_check
+  changed_when: false
+  failed_when: false
+
+#2. Only create the mountpoint directory if NOT mounted
+- name: Ensure mount point directory exists 
+  file:
+    path: "{{ source_base_dir }}"
+    state: directory
+    mode: '0755'
+  when: mountpoint_check.rc != 0
+
+# 3. Only mount NFS if NOT mounted
+- name: Mount source NFS 
+  command: /bin/mount -t nfs -o ro,_netdev {{ nfs_server }}:{{ nfs_export }} {{ source_base_dir }}
+  when: mountpoint_check.rc != 0
+  become: true
+
+# 4. Always verify the result
+- name: Verify NFS mount availability
+  command: df -kh "{{ source_base_dir }}"
+  register: df_out
+  changed_when: false
+  failed_when: df_out.rc != 0
+  
+- name: Verify NFS mount availability
+  command: df -kh "{{ source_base_dir }}"
+  register: df_out
+  changed_when: false
+  failed_when: false  
+
+- name: Fail if {{ source_base_dir }} is not available
+  fail:
+    msg: >
+      Verification failed. 'df -kh {{ source_base_dir }}' did not succeed after mounting
+      {{ nfs_server }}:{{ nfs_export }} to {{ source_base_dir }}.
+      Output: {{ df_out.stderr | default('') }} {{ df_out.stdout | default('') }}
+  when: df_out.rc != 0

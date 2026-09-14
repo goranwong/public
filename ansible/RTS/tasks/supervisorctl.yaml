@@ -1,0 +1,40 @@
+# task to start / stop RTS processes
+---
+- name: "{{ target_action }} RTS processes"
+  shell: supervisorctl {{ target_action }} all
+  
+- name: Verify supervisorctl status
+  block:
+
+    - name: Get supervisorctl service status
+      ansible.builtin.command:
+        argv:
+          - supervisorctl status all
+      register: status
+      changed_when: false
+
+      failed_when:
+        - (target_action == "start" and '"STOPPED" in status.stdout')
+        - (target_action == "stop" and '"RUNNING" in status.stdout')
+
+  rescue:
+
+    - name: Display supervisorctl status on validation failure
+      ansible.builtin.debug:
+        msg: |
+          supervisorctl validation failed on {{ inventory_hostname }}.
+
+          Requested action: {{ target_action }}
+          Return code: {{ status.rc | default('not available') }}
+
+          Standard output:
+          {{ status.stdout | default('No stdout returned') }}
+
+          Standard error:
+          {{ status.stderr | default('No stderr returned') }}
+
+    - name: Fail to {{ target_action }} processes
+      ansible.builtin.fail:
+        msg: >-
+          processes failed to reach the expected state after
+          '{{ target_action }}' on {{ inventory_hostname }}.

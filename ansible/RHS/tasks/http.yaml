@@ -1,0 +1,28 @@
+# task to start and stop httpd
+---
+  - name: start / stop httpd
+    become: true  
+    shell: /opt/app/rhs/apps/apache/latest/bin/httpd -k  {{ target_action }}
+    register: httpd
+  - debug:
+      msg: "{{ httpd.stdout }}"
+  
+  - name: wait for 30 seconds before checking http process count
+    pause:
+      seconds: 30
+
+  - name: get httpd process count
+    shell: ps -elf | grep -i httpd | grep -v grep | wc -l
+    register: httpd_count
+  
+  - name: httpd is failed to stop
+    fail:
+      msg: "httpd is failed to stop."
+    when: (httpd_count.stdout | int > 0 ) and (target_action == "stop")
+
+  - name: httpd is failed to start
+    fail:
+      msg: "http is failed to start"
+    when: (httpd_count.stdout | int == 0 ) and (target_action == "start")
+
+  

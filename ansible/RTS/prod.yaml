@@ -1,0 +1,34 @@
+# ======================================================================
+# Author:               Goran Wong
+# Description:          Start / Stop template for Realiti
+# Version:              v1
+# First Draft:          2026-07-28
+# last update:          2026-09-14
+# ----------------------------------------------------------------------
+# Survey Variables:
+# - target_action (start / stop application) 
+# - target_server 
+# ======================================================================
+---
+- name: Start/Stop applications for Realiti
+  hosts: "{{ target_server }}"
+  become: true
+  become_method: sudo
+  become_flags: -i
+  become_user: realitidist
+  gather_facts: false
+  tasks:
+ 
+    - name: "{{ target_action }} Realiti cron job"
+      include_tasks: tasks/crontab_realitidist.yaml
+    
+    - name: "{{ target_action }} lb services"
+      include_tasks: tasks/lb.yaml
+      when: inventory_hostname in ['lvappp01285'] or inventory_hostname in ['lvappp01288']
+    
+    - name: "{{ target_action }} Realiti"
+      include_tasks: tasks/supervisorctl.yaml  
+      
+    - name: "{{ target_action }} smurf monitoring"
+      include_tasks: tasks/smurf.yaml   
+    

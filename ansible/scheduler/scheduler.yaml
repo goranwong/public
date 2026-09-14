@@ -1,0 +1,27 @@
+- name: "start / stop tidal agent"
+  gather_facts: false
+  become: true
+  become_user: scheduler
+  hosts: "{{ target_server }}"
+  vars:
+    scheduler_base: /opt/scheduler/agent/bin
+
+  tasks:
+    - name: Get tidal agent name
+      shell: "grep '^agents=' {{ scheduler_base }}/tagent.ini | cut -d'=' -f2"
+      register: agent
+      changed_when: false
+
+    - name: Stop / start tidal agent
+      shell: "{{ scheduler_base }}/tagent {{ agent.stdout }} {{ target_action }}"
+
+    - name: Check if tidal agent is started / stopped
+      shell: "{{ scheduler_base }}/tagent {{ agent.stdout }} status"
+      register: status
+      failed_when:
+        - target_action == "start" and "'is Running' not in status.stdout"
+        - target_action == "stop" and "'is Down' not in status.stdout"
+
+    - name: show tidal agent status
+      debug:
+        msg: " {{ status.stdout }}"
