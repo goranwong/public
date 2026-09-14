@@ -1,4 +1,4 @@
-This is ansible playbook for oracle client patching for Riskreg applications  
+This is ansible playbook for oracle client patching 
 
  - Oracle client patching source is from NFS - 172.100.1.231:/export/ansible/ORAPATCH, it will be mounted to /tmp/oracle and will be unmount after patching.  
  

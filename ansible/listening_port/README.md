@@ -1,7 +1,11 @@
 This is ansible playbook to turn on / off DNS listening port system service. For DNS failover purpose.  
 
+==========================================
+
 variables    
----------------------------
+
+==========================================
+
 target_host: hostname  
 
 target_action: "start" or "stop" or "no_action"  
