@@ -1,11 +1,10 @@
-Ansible playbook for RHS application operation
+Ansible playbook for RHS application operation  
 
---- main playbook ---
-rhs.yaml
+--- main playbook ---  
+rhs.yaml  
 
 
-tasks - tasks playbook to stop and start services
----
-airflow.yaml
-guard.yaml
+--- tasks ---  
+airflow.yaml  
+guard.yaml  
 

@@ -1,13 +1,13 @@
-Ansible playbook for RTS application operation
+Ansible playbook for RTS application operation  
 
---- main playbook ---
-prod.yaml           - PROD env
-nonprod.yaml        - non-prod env
+--- main playbook ---  
+prod.yaml           - PROD env   
+nonprod.yaml        - non-prod env   
 
-tasks - tasks playbook to stop and start specific application componments, depending on the choice in main playbook
----
-crontab_rtsrun.yaml - disable crontab before patching and enable after patching
+--- tasks ---  
+
+crontab_rtsrun.yaml - disable crontab before patching and enable after patching  
 lb.yaml  	        - stop / start LB services (only for prod)         
-monitoring.yaml		- disable / enable process monitoring for patching
-supervisorctl.yaml  - stop / start supervisorctl control
+monitoring.yaml		- disable / enable process monitoring for patching  
+supervisorctl.yaml  - stop / start supervisorctl control  
 

@@ -1,17 +1,17 @@
-Ansible playbook for FNBS application operation
+Ansible playbook for FNBS application operation  
 
---- main playbook ---
-fnbs.yaml           - PROD env
+--- main playbook ---  
+fnbs.yaml 
 
 
-tasks - tasks playbook to stop and start specific application componments, depending on the choice in main playbook
----
-airflow
-fnbs-ae-etl
-fnbs-report
-fnbs-rws
-fnbs-starter
-fnbs-tools
-fnbs-ui
-refdata-service
+--- tasks ---  
+
+airflow.yaml  
+fnbs-ae-etl.yaml  
+fnbs-report.yaml  
+fnbs-rws.yaml  
+fnbs-starter.yaml  
+fnbs-tools.yaml  
+fnbs-ui.yaml  
+refdata-service.yaml  
 
