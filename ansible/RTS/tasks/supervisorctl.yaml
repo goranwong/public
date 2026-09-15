@@ -7,7 +7,7 @@
   block:
 
     - name: Get supervisorctl service status
-      ansible.builtin.command:
+      command:
         argv:
           - supervisorctl status all
       register: status
@@ -20,7 +20,7 @@
   rescue:
 
     - name: Display supervisorctl status on validation failure
-      ansible.builtin.debug:
+      debug:
         msg: |
           supervisorctl validation failed on {{ inventory_hostname }}.
 
@@ -34,7 +34,7 @@
           {{ status.stderr | default('No stderr returned') }}
 
     - name: Fail to {{ target_action }} processes
-      ansible.builtin.fail:
+      fail:
         msg: >-
           processes failed to reach the expected state after
           '{{ target_action }}' on {{ inventory_hostname }}.

@@ -3,7 +3,7 @@
   block:
 
     - name: Get current LB running service count
-      ansible.builtin.shell: |
+      shell: |
         /app/rts/graphite/logicblox/current/bin/lb services status 2>&1 |
           grep -c ': running' || true
       register: lb_initial_running_count
@@ -12,7 +12,7 @@
 
     # Clean up only when startup finds a partial state
     - name: Stop partially running LB services before startup
-      ansible.builtin.command:
+      command:
         argv:
           - /app/rts/graphite/logicblox/current/bin/lb
           - services
@@ -24,7 +24,7 @@
         - (lb_initial_running_count.stdout | trim | int) < 3
 
     - name: Wait until partial LB services are fully stopped
-      ansible.builtin.shell: |
+      shell: |
         /app/rts/graphite/logicblox/current/bin/lb services status 2>&1 |
           grep -c ': running' || true
       register: lb_cleanup_running_count
@@ -40,7 +40,7 @@
 
     # Start only if all three services are not already running
     - name: Start LB services
-      ansible.builtin.command:
+      command:
         argv:
           - /app/rts/graphite/logicblox/current/bin/lb
           - services
@@ -52,7 +52,7 @@
 
     # Stop only if one or more services are running
     - name: Stop LB services
-      ansible.builtin.command:
+      command:
         argv:
           - /app/rts/graphite/logicblox/current/bin/lb
           - services
@@ -63,7 +63,7 @@
         - (lb_initial_running_count.stdout | trim | int) > 0
 
     - name: Wait for LB services to reach expected state
-      ansible.builtin.shell: |
+      shell: |
         /app/rts/graphite/logicblox/current/bin/lb services status 2>&1 |
           grep -c ': running' || true
       register: lb_running_count
@@ -85,7 +85,7 @@
         )
 
     - name: Validate final LB service count
-      ansible.builtin.assert:
+      assert:
         that:
           - >-
             (
@@ -109,7 +109,7 @@
   rescue:
 
     - name: Display LB failure message
-      ansible.builtin.debug:
+      debug:
         msg: |
           LB services failed to {{ target_action }} on {{ inventory_hostname }}.
 
@@ -126,7 +126,7 @@
           {{ lb_action.stderr | default("No error returned", true) }}
 
     - name: Mark LB service operation as failed
-      ansible.builtin.fail:
+      fail:
         msg: >-
           LB services failed to '{{ target_action }}'
           on {{ inventory_hostname }}.
@@ -134,7 +134,7 @@
   always:
 
     - name: Get final LB services status
-      ansible.builtin.command:
+      command:
         argv:
           - /app/rts/graphite/logicblox/current/bin/lb
           - services
@@ -144,7 +144,7 @@
       failed_when: false
 
     - name: Display final LB services status
-      ansible.builtin.debug:
+      debug:
         msg: "{{ item }}"
       loop: >-
         {{
