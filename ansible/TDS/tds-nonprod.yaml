@@ -1,25 +1,33 @@
 ---
 - name: TDS - Stop / Start application
   hosts: "{{ target_server }}"
-  become: true
-  become_user: "{{ run_account }}"
-  gather_facts: False
+  gather_facts: false
+  pre_tasks:
+    - name: Load account map
+      include_vars:
+        file: vars/run_accounts.yml
+
+    - name: Set run_account fact
+      set_fact:
+        run_account: "{{ run_accounts_map[inventory_hostname] }}"
+
   tasks:
-    - include_tasks: tasks/airflow.yaml
-      when: "target_service == 'airflow'"
+    - name: Application Management Tasks
+      become: true
+      become_user: "{{ run_account }}"
+      block:
+        - name: Manage Airflow
+          include_tasks: tasks/airflow.yaml
+          when: target_service in ['airflow', 'ALL']
 
-    - include_tasks: tasks/nifi.yaml
-      when: "target_service == 'nifi'"
+        - name: Manage NiFi
+          include_tasks: tasks/nifi.yaml
+          when: target_service in ['nifi', 'ALL']
 
-    - include_tasks: tasks/tds_bt.yaml
-      when: "target_service == 'tds_bt'"
+        - name: Manage TDS BT
+          include_tasks: tasks/tds_bt.yaml
+          when: target_service in ['tds_bt', 'ALL']
 
-    - include_tasks: tasks/tds_ui.yaml
-      when: "target_service == 'tds_ui'"
-
-    - block:
-        - include_tasks: tasks/airflow.yaml
-        - include_tasks: tasks/nifi.yaml
-        - include_tasks: tasks/tds_bt.yaml
-        - include_tasks: tasks/tds_ui.yaml    
-      when: "target_service == 'ALL'"
+        - name: Manage TDS UI
+          include_tasks: tasks/tds_ui.yaml
+          when: target_service in ['tds_ui', 'ALL']

@@ -8,13 +8,12 @@ This is ansible playbook for oracle client patching
 
 Survey in template:  
 
-Backup Directory : Path to store the backup tar ball of the oracle base directory  
-Oracle Base Directory : Full path of Oracle base directory  
-Oracle client account : account which owns the $ORACLE_HOME  
-Patch files source :  
+--- Ansible Tower survey ---
 
-	NFS - it will mount /tmp/oracle to 172.100.1.231:/export/ansible/ORAPATCH and unmount after patching is completed.  
-	local - it will search for oracle patch in /tmp/oracle, playbook will be failed if patch folders not found.  
-	
-list of patch ID: Number only - omit the prefix, separate each patch ID by space if it is more than one  
-email : Email address to receive notification once patching is completed  
+target_server : hostname  
+Backup Directory : < Full path of directory for the backup >     
+Oracle Base Directory : < Base Directory of Oracle Client >  
+Patch files source { NFS (default) | local }  #source of patch files  
+oracle client account : oracle (default)  
+list of patch ID : < Number only - omit the prefix, separate each patch ID by space if it is more than one >  
+
