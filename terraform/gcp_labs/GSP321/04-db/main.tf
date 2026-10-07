@@ -2,7 +2,7 @@
 data "terraform_remote_state" "network" {
   backend = "local"
   config = {
-    path = "../network/terraform.tfstate"
+    path = "../01-network/terraform.tfstate"
   }
 }
 
@@ -25,14 +25,19 @@ module "mysql_db" {
 
   ip_configuration = {
     ipv4_enabled        = true
-  
-    # Authorized Networks configuration
-     authorized_networks = [
-       {
-         name  = "allow-all"
-         value = "0.0.0.0/0"
-       }
-     ]
+    authorized_networks = []
   }
+
+#  ip_configuration = {
+#    ipv4_enabled        = true
+#  
+#    # Authorized Networks configuration
+#     authorized_networks = [
+#       {
+#         name  = "allow-all"
+#         value = "0.0.0.0/0"
+#       }
+#     ]
+#  }
 }
 

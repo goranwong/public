@@ -2,14 +2,14 @@
 data "terraform_remote_state" "network" {
   backend = "local"
   config = {
-    path = "../network/terraform.tfstate"
+    path = "../01-network/terraform.tfstate"
   }
 }
 
 
 resource "google_container_cluster" "griffin_dev" {
   name     = "griffin-dev"
-  location = local.zone
+  location = var.zone
 
   network = module.griffin-dev-vpc.network_name
   subnetwork = module.griffin-dev-vpc.subnets_names[1]

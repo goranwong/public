@@ -2,7 +2,7 @@
 data "terraform_remote_state" "network" {
   backend = "local"
   config = {
-    path = "../network/terraform.tfstate"
+    path = "../01-network/terraform.tfstate"
   }
 }
 
@@ -38,7 +38,7 @@ resource "google_compute_instance" "bastion" {
 
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-11"
+      image = "debian-cloud/debian-12"
     }
   }
 
