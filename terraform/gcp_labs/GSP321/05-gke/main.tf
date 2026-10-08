@@ -11,8 +11,11 @@ resource "google_container_cluster" "griffin_dev" {
   name     = "griffin-dev"
   location = var.zone
 
-  network = module.griffin-dev-vpc.network_name
-  subnetwork = module.griffin-dev-vpc.subnets_names[1]
+  #network = module.griffin-dev-vpc.network_name
+  #subnetwork = module.griffin-dev-vpc.dev_wp_subnet_name
+  
+  network    = data.terraform_remote_state.network.outputs.dev_network_name
+  subnetwork = data.terraform_remote_state.network.outputs.dev_wp_subnet_name
 
   initial_node_count       = 2
   remove_default_node_pool = false
