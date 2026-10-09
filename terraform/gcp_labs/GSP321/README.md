@@ -56,6 +56,9 @@ Create a bastion host with two network interfaces, one connected to griffin-dev-
 
 Task 4. Create and configure Cloud SQL Instance
 
+export TF_VAR_db_password="stormwind_rules"
+then terraform apply
+
 Done by terraform :
 
 	Create a MySQL Cloud SQL Instance called griffin-dev-db in us-central1.
@@ -64,7 +67,7 @@ Done by terraform :
 	CREATE USER "wp_user"@"%" IDENTIFIED BY "stormwind_rules";
 
 after terraform apply
-
+	gcloud config set project $PROJECT_ID
 	gcloud sql connect griffin-dev-db --user=wp_user
 	GRANT ALL PRIVILEGES ON wordpress.* TO "wp_user"@"%";
 	FLUSH PRIVILEGES;	
@@ -80,6 +83,8 @@ Create a 2 node cluster (e2-standard-4) called griffin-dev, in the griffin-dev-w
 Task 6. Prepare the Kubernetes cluster
 
 From Cloud Shell copy all files from gs://spls/gsp321/wp-k8s.
+
+	gsutil cp gs://spls/gsp321/wp-k8s/* .
 
 The WordPress server needs to access the MySQL database using the username and password you created in task 4.
 
@@ -107,6 +112,23 @@ gcloud iam service-accounts keys create key.json \
 kubectl create secret generic cloudsql-instance-credentials \
     --from-file key.json
 
+wp-deployment.yaml
+
+	Cloud SQL connection strings require the format:
+	<PROJECT_ID>:<REGION>:<INSTANCE_NAME>
+
+	Update Connection String: Make sure line 42 (-instances=...) matches your exact GCP Project ID, Region, and Cloud SQL Instance Name:
+
+	- "-instances=<YOUR_PROJECT_ID>:asia-east1:griffin-dev-db=tcp:3306"
+	
+		kubectl apply -f wp-deployment.yaml
+		kubectl apply -f wp-service.yaml
+		
+		kubectl get deployment
+		kubectl get pods -want
+		kubectl get service to get external IP
+
+check status for both 6 and 7
 
 Task 7. Create a WordPress deployment
 Now that you have provisioned the MySQL database, and set up the secrets and volume, you can create the deployment using wp-deployment.yaml.
@@ -123,20 +145,11 @@ Once the Load Balancer is created, you can visit the site and ensure you see the
 At this point the dev team will take over and complete the install and you move on to the next task.
 
 
-	Cloud SQL connection strings require the format:
-	<PROJECT_ID>:<REGION>:<INSTANCE_NAME>
-
-	Update Connection String: Make sure line 42 (-instances=...) matches your exact GCP Project ID, Region, and Cloud SQL Instance Name:
-
-	- "-instances=<YOUR_PROJECT_ID>:asia-east1:griffin-dev-db=tcp:3306"
-	
-		kubectl apply -f wp-deployment.yaml
-		kubectl apply -f wp-service.yaml
-	
-
 
 Task 8. Enable monitoring
 Create an uptime check for your WordPress development site.
+
+terraform plan -var="wordpress_external_ip=$(kubectl get svc wordpress -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" --var-file ../gsp321.tfvars
 
 terraform apply -auto-approve \
   -var="wordpress_external_ip=$(kubectl get svc wordpress -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
