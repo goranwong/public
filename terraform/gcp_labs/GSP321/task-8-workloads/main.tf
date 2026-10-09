@@ -33,20 +33,6 @@ resource "kubernetes_secret" "database" {
   }
 }
 
-#resource "kubernetes_persistent_volume_claim" "wp_pv_claim" {
-#  metadata {
-#    name = "wordpress-volumeclaim"
-#  }
-#  spec {
-#    access_modes = ["ReadWriteOnce"]
-#    resources {
-#      requests = {
-#        storage = "10Gi"
-#      }
-#    }
-#  }
-#}
-
 resource "google_monitoring_uptime_check_config" "wordpress_uptime_check" {
   display_name = "wordpress-frontend-uptime-check"
   project      = var.project_id

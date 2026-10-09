@@ -55,12 +55,19 @@ Create a bastion host with two network interfaces, one connected to griffin-dev-
 
 
 Task 4. Create and configure Cloud SQL Instance
-Create a MySQL Cloud SQL Instance called griffin-dev-db in us-central1.
-Connect to the instance and run the following SQL commands to prepare the WordPress environment:
-CREATE DATABASE wordpress;
-CREATE USER "wp_user"@"%" IDENTIFIED BY "stormwind_rules";
-GRANT ALL PRIVILEGES ON wordpress.* TO "wp_user"@"%";
-FLUSH PRIVILEGES;
+
+Done by terraform :
+
+	Create a MySQL Cloud SQL Instance called griffin-dev-db in us-central1.
+	Connect to the instance and run the following SQL commands to prepare the WordPress environment:
+	CREATE DATABASE wordpress;
+	CREATE USER "wp_user"@"%" IDENTIFIED BY "stormwind_rules";
+
+after terraform apply
+
+	gcloud sql connect griffin-dev-db --user=wp_user
+	GRANT ALL PRIVILEGES ON wordpress.* TO "wp_user"@"%";
+	FLUSH PRIVILEGES;	
 
 
 
@@ -80,6 +87,16 @@ You do this by setting the values as secrets. WordPress also needs to store its 
 
 Add the following secrets and volume to the cluster using wp-env.yaml.
 
+	gcloud container clusters get-credentials griffin-dev --zone= 
+	
+	then 
+	update yaml files
+	
+
+		
+		kubectl apply -f wp-env.yaml
+
+	
 Make sure you configure the username to wp_user and password to stormwind_rules before creating the configuration.
 
 You also need to provide a key for a service account that was already set up. This service account provides access to the database for a sidecar container.
@@ -106,9 +123,23 @@ Once the Load Balancer is created, you can visit the site and ensure you see the
 At this point the dev team will take over and complete the install and you move on to the next task.
 
 
+	Cloud SQL connection strings require the format:
+	<PROJECT_ID>:<REGION>:<INSTANCE_NAME>
+
+	Update Connection String: Make sure line 42 (-instances=...) matches your exact GCP Project ID, Region, and Cloud SQL Instance Name:
+
+	- "-instances=<YOUR_PROJECT_ID>:asia-east1:griffin-dev-db=tcp:3306"
+	
+		kubectl apply -f wp-deployment.yaml
+		kubectl apply -f wp-service.yaml
+	
+
+
 Task 8. Enable monitoring
 Create an uptime check for your WordPress development site.
 
+terraform apply -auto-approve \
+  -var="wordpress_external_ip=$(kubectl get svc wordpress -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
 
 Task 9. Provide access for an additional engineer
 You have an additional engineer starting and you want to ensure they have access to the project. Grant them the editor role to the project.
