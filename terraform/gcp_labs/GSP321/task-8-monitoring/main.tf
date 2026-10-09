@@ -1,16 +1,7 @@
-terraform {
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.0"
-    }
-  }
-}
-
 data "terraform_remote_state" "gke" {
   backend = "local"
   config = {
-    path = "../05-gke/terraform.tfstate"
+    path = "../task-5-gke/terraform.tfstate"
   }
 }
 
@@ -20,16 +11,6 @@ provider "kubernetes" {
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
     command     = "gke-gcloud-auth-plugin"
-  }
-}
-
-resource "kubernetes_secret" "database" {
-  metadata {
-    name = "database"
-  }
-  data = {
-    username = "wp_user"
-    password = "stormwind_rules"
   }
 }
 

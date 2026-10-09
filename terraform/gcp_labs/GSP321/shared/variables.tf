@@ -13,6 +13,12 @@ variable "zone" {
   type        = string
 }
 
+variable "db_password" {
+  type        = string
+  description = "Database user password"
+  sensitive   = true
+}
+
 variable "student2_email" {
   description = "Email address for the second student/engineer"
   type        = string
