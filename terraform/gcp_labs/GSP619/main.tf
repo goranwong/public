@@ -7,54 +7,47 @@ terraform {
   }
 }
 
-
 provider "google" {
   project = varject_id
-  region  = var.region
+}
+
+# Network Module
+
+module "vpc" {
+  for_each = var.vpcs
+
+  source  = "terraform-google-modules/network/google"
+  version = "~> 18.3"
+
+  project_id   = var.project_id
+  network_name = each.value.network_name
+  subnets      = each.value.subnets
 }
 
 
-module "vpc-demo" {
-    source  = "terraform-google-modules/network/google"
-    version = "~> 18.3"
-	
-	project_id = var.project_id
-	network_name = "vpc-demo"
-	
-	subnets = [
-		{
-			subnet_name   = "vpc-demo-subnet1"
-			subnet_ip     = "10.1.1.0/24"
-			subnet_region = var.region
-			description   = "subnet 1 of VPC demo"
-		},	
-		{
-			subnet_name   = "vpc-demo-subnet2"
-			subnet_ip     = "10.2.1.0/24"
-			subnet_region = var.region
-			description   = "subnet 2 of VPC demo"
-		}
-	
-	]
+resource "google_compute_instance" "vm_instances" {
+  for_each = var.instances
+
+  project      = var.project_id
+  name         = each.key              # "instance-zone1-vm", "instance-zone2-vm"
+  machine_type = "e2-medium"
+  zone         = each.value.zone       # Pulls zone from the map
+
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-12"
+    }
+  }
+
+  network_interface {
+    network    = each.value.network_name    # Dynamic VPC per VM
+    subnetwork = each.value.subnetwork      # Dynamic Subnet per VM
+    
+    access_config {} 
+  }
 }
 
-module "vpc-on-prem" {
-    source  = "terraform-google-modules/network/google"
-    version = "~> 18.3"
-	
-	project_id   = var.project_id
-	network_name = "on-prem"
-	
-	subnets = [	
-		{
-			subnet_name   = "on-prem-subnet1"
-			subnet_ip     = "192.168.1.0/24"
-			subnet_region = var.region
-			description   = "subnet 1 for on-prem"
-		}			
-	]
-}
-
+################ firewall rules ################ 
 
 resource "google_compute_firewall" "vpc-demo-allow-internal" {
   name    = "vpc-demo-allow-internal"
@@ -120,65 +113,3 @@ resource "google_compute_firewall" "on-prem-allow-ssh-icmp" {
 }
 
 
-resource "google_compute_instance" "vpc-demo-instance1" {
-  name         = "vpc-demo-instance1"
-  machine_type = "e2-medium"
-  zone         = var.zone
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-12"
-    }
-  }
-
-  network_interface {
-    subnetwork = data.terraform_remote_state.network.outputs.vpc_demo_subnet1
-    access_config {}
-  }
-
-  metadata = {
-    enable-oslogin = "TRUE"
-  }
-}
-
-resource "google_compute_instance" "vpc-demo-instance2" {
-  name         = "vpc-demo-instance2"
-  machine_type = "e2-medium"
-  zone         = var.zone
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-12"
-    }
-  }
-
-  network_interface {
-    subnetwork = data.terraform_remote_state.network.outputs.vpc_demo_subnet2
-    access_config {}
-  }
-
-  metadata = {
-    enable-oslogin = "TRUE"
-  }
-}
-
-resource "google_compute_instance" "on-prem-instance1" {
-  name         = "on-prem-instance1"
-  machine_type = "e2-medium"
-  zone         = var.zone
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-12"
-    }
-  }
-
-  network_interface {
-    subnetwork = data.terraform_remote_state.network.outputs.on_prem_subnet1
-    access_config {}
-  }
-
-  metadata = {
-    enable-oslogin = "TRUE"
-  }
-}
