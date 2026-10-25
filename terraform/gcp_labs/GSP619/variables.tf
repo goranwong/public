@@ -3,26 +3,6 @@ variable "project_id" {
   type        = string
 }
 
-variable "region1" {
-  description = "GCP Region 1"
-  type        = string
-}
-
-variable "zone1" {
-  description = "GCP Zone 1"
-  type        = string
-}
-
-variable "region2" {
-  description = "GCP Region 2"
-  type        = string
-}
-
-variable "zone2" {
-  description = "GCP Zone 2"
-  type        = string
-}
-
 variable "machine_type" {
   type        = string
   description = "The machine type for the VM"
@@ -48,12 +28,37 @@ variable "vpcs" {
   }))
 }
 
-variable "instances" {
+variable "vm_instances" {
   type = map(object({
-    zone         = string
-    subnetwork   = string
-	machine_type = string
-	image        = string
+    machine_type = string
+    image        = string
   }))
   description = "Map of instances with their respective zones and subnets"
+}
+
+variable "rules" {
+  type = list(object({
+    name                    = string
+	network                 = string
+    description             = optional(string, null)
+    direction               = optional(string, "INGRESS")
+    priority                = optional(number, 1000)
+    ranges                  = optional(list(string), [])
+    source_ranges           = optional(list(string), [])
+    destination_ranges      = optional(list(string), [])
+    source_tags             = optional(list(string), null)
+    target_tags             = optional(list(string), null)
+    source_service_accounts = optional(list(string), null)
+    target_service_accounts = optional(list(string), null)
+    allow = optional(list(object({
+      protocol = string
+      ports    = optional(list(string), [])
+    })), [])
+    deny = optional(list(object({
+      protocol = string
+      ports    = optional(list(string), [])
+    })), [])
+  }))
+  description = "List of firewall rules definitions"
+  default     = []
 }

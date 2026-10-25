@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "google" {
-  project = varject_id
+  project = var.project_id
 }
 
 # Network Module
@@ -26,90 +26,43 @@ module "vpc" {
 
 
 resource "google_compute_instance" "vm_instances" {
-  for_each = var.instances
+  for_each = var.vm_instances
 
   project      = var.project_id
-  name         = each.key              # "instance-zone1-vm", "instance-zone2-vm"
-  machine_type = "e2-medium"
-  zone         = each.value.zone       # Pulls zone from the map
+  name         = each.key 
+  machine_type = var.machine_type
+  zone         = each.value.zone 
 
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-12"
+      image = var.image
     }
   }
 
   network_interface {
-    network    = each.value.network_name    # Dynamic VPC per VM
-    subnetwork = each.value.subnetwork      # Dynamic Subnet per VM
-    
-    access_config {} 
-  }
-}
+    network    = each.value.network_name 
+    subnetwork = each.value.subnetwork  
 
-################ firewall rules ################ 
-
-resource "google_compute_firewall" "vpc-demo-allow-internal" {
-  name    = "vpc-demo-allow-internal"
-  network = data.terraform_remote_state.network.outputs.vpc_demo_network_name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["0-65535"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["0-65535"]
-  }
-  allow {
-    protocol = "icmp"
-  }    
-  source_ranges = ["10.0.0.0/8"]
-}
-
-
-resource "google_compute_firewall" "vpc-demo-allow-ssh-icmp" {
-  name    = "vpc-demo-allow-internal"
-  network = data.terraform_remote_state.network.outputs.vpc_demo_network_name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-  allow {
-    protocol = "icmp"
-  }
-}
-
-resource "google_compute_firewall" "on-prem-allow-internal" {
-  name    = "vpc-demo-allow-internal"
-  network = data.terraform_remote_state.network.outputs.on_prem_network_name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["0-65535"]
-  }
-  allow {
-    protocol = "udp"
-    ports    = ["0-65535"]
-  }
-  allow {
-    protocol = "icmp"
-  }  
-  source_ranges = ["192.168.0.0/16"]
-}
-
-resource "google_compute_firewall" "on-prem-allow-ssh-icmp" {
-  name    = "vpc-demo-allow-internal"
-  network = data.terraform_remote_state.network.outputs.on_prem_network_name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-  allow {
-    protocol = "icmp"
+    access_config {}
   }
 }
 
 
+resource "google_compute_firewall" "firewall_rules" {
+  for_each = var.firewall_rules
+
+  name          = each.key
+  network       = each.value.network
+  description   = each.value.description
+  priority      = each.value.priority
+  direction     = "INGRESS"
+  source_ranges = each.value.source_ranges
+
+  dynamic "allow" {
+    for_each = each.value.allows
+    content {
+      protocol = allow.value.protocol
+      ports    = length(allow.value.ports) > 0 ? allow.value.ports : null
+    }
+  }
+}

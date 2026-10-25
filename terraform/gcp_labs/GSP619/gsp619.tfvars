@@ -1,97 +1,97 @@
-project_id = "
-region1    = "
-zone1      = "
-region2    = "
-zone2      = "
+project_id = "qwiklabs-gcp-03-bb9d62f2fe00"
 vpcs = {
   "vpc-demo" = {
-     network_name = "vpc-demo"
-	
-     subnets = [
-     	{
-     		subnet_name   = "vpc-demo-subnet1"
-     		subnet_ip     = "10.1.1.0/24"
-     		subnet_region = var.region1
-     		description   = "subnet 1 of VPC demo"
-     	},	
-     	{
-     		subnet_name   = "vpc-demo-subnet2"
-     		subnet_ip     = "10.2.1.0/24"
-     		subnet_region = var.region2
-     		description   = "subnet 2 of VPC demo"
-     	}
-     
-	]
-     },
-  "on-prem" {
-     network_name = "on-prem"
-	 subnets = [	
-		{
-			subnet_name   = "on-prem-subnet1"
-			subnet_ip     = "192.168.1.0/24"
-			subnet_region = var.region2
-			description   = "subnet 1 for on-prem"
-		}			
-	]
+    network_name = "vpc-demo"
+
+    subnets = [
+      {
+        subnet_name   = "vpc-demo-subnet1"
+        subnet_ip     = "10.1.1.0/24"
+        subnet_region = "us-west1"
+        description   = "subnet 1 of VPC demo"
+      },
+      {
+        subnet_name   = "vpc-demo-subnet2"
+        subnet_ip     = "10.2.1.0/24"
+        subnet_region = "us-central"
+        description   = "subnet 2 of VPC demo"
+      }
+
+    ]
+  },
+  "on-prem" = {
+    network_name = "on-prem"
+    subnets = [
+      {
+        subnet_name   = "on-prem-subnet1"
+        subnet_ip     = "192.168.1.0/24"
+        subnet_region = "us-central"
+        description   = "subnet 1 for on-prem"
+      }
+    ]
+  }
 }
 
 vm_instances = {
   "vpc-demo-instance1" = {
-     machine_type = var.machine_type
-     zone         = var.zone1
-
-	 boot_disk {
-	 initialize_params {
-		 image = var.image
-	 }
-	 }
-
-     network_interface {
-       subnetwork = data.terraform_remote_state.network.outputs.vpc_demo_subnet1
-       access_config {}
-     }
-     
-     metadata = {
-       enable-oslogin = "TRUE"
-     }
+    zone         = "us-west1-b"
+    network_name = "vpc-demo"
+    subnetwork   = "vpc-demo-subnet1"
   },
-  "vpc-demo-instance2"  = {
-    machine_type = var.machine_type
-    zone         = var.zone1
-
-    boot_disk {
-      initialize_params {
-        image = var.image
-      }
-    }
-    
-    network_interface {
-      subnetwork = data.terraform_remote_state.network.outputs.vpc_demo_subnet2
-      access_config {}
-    }
-    
-    metadata = {
-      enable-oslogin = "TRUE"
-    }
+  "vpc-demo-instance2" = {
+    zone         = "us-west1-b"
+    network_name = "vpc-demo"
+    subnetwork   = "vpc-demo-subnet2"
   },
   "on-prem-instance1" = {
-    machine_type = var.machine_type
-    zone         = var.zone2
-    
-    boot_disk {
-      initialize_params {
-        image = var.image
-      }
-    }
-    
-    network_interface {
-      subnetwork = data.terraform_remote_state.network.outputs.on_prem_subnet1
-      access_config {}
-    }
-    
-    metadata = {
-      enable-oslogin = "TRUE"
-    }
-  } 
-}  
-  
+    zone         = "us-central-b"
+    network_name = "on-prem"
+    subnetwork   = "on-prem-subnet1"
+  }
+}
+
+firewall_rules = {
+  "vpc-demo-allow-internal" = {
+    network       = "vpc-demo"
+    description   = "all internal traffic within the network"
+    source_ranges = ["10.0.0.0/8"]
+    priority      = 1000
+    allows = [
+      { protocol = "tcp", ports = ["0-65535"] },
+      { protocol = "udp", ports = ["0-65535"] },
+      { protocol = "icmp", ports = [] }
+    ]
+  },
+  "vpc-demo-allow-ssh-icmp" = {
+    network       = "vpc-demo"
+    description   = "allow ssh, icmp from anywhere"
+    priority      = 1000
+    source_ranges = ["0.0.0.0/0"]
+    allows = [
+      { protocol = "tcp", ports = ["22"] },
+      { protocol = "icmp", ports = [] }
+    ]
+  },
+  "on-prem-allow-internal" = {
+    network       = "on-prem"
+    description   = "all internal traffic within the network"
+    source_ranges = ["192.168.0.0/16"]
+    priority      = 1000
+    allows = [
+      { protocol = "tcp", ports = ["0-65535"] },
+      { protocol = "udp", ports = ["0-65535"] },
+      { protocol = "icmp", ports = [] }
+    ]
+  },
+  "on-prem-allow-ssh-icmp" = {
+    network       = "on-prem"
+    description   = "allow ssh, icmp from anywhere"
+    priority      = 1000
+    source_ranges = ["192.168.0.0/16"]
+    allows = [
+      { protocol = "tcp", ports = ["22"] },
+      { protocol = "icmp", ports = [] }
+    ]
+  }  
+}
+
