@@ -27,7 +27,6 @@ module "vpc" {
 
 resource "google_compute_instance" "vm_instances" {
   for_each = var.vm_instances
-
   project      = var.project_id
   name         = each.key 
   machine_type = var.machine_type
@@ -45,12 +44,12 @@ resource "google_compute_instance" "vm_instances" {
 
     access_config {}
   }
+  depends_on = [module.vpc]
 }
 
 
 resource "google_compute_firewall" "firewall_rules" {
   for_each = var.firewall_rules
-
   name          = each.key
   network       = each.value.network
   description   = each.value.description
@@ -65,4 +64,5 @@ resource "google_compute_firewall" "firewall_rules" {
       ports    = length(allow.value.ports) > 0 ? allow.value.ports : null
     }
   }
+  depends_on = [module.vpc]
 }

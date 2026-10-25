@@ -1,4 +1,4 @@
-project_id = "qwiklabs-gcp-03-bb9d62f2fe00"
+project_id = " "
 vpcs = {
   "vpc-demo" = {
     network_name = "vpc-demo"
@@ -7,13 +7,13 @@ vpcs = {
       {
         subnet_name   = "vpc-demo-subnet1"
         subnet_ip     = "10.1.1.0/24"
-        subnet_region = "us-west1"
+        subnet_region = " "
         description   = "subnet 1 of VPC demo"
       },
       {
         subnet_name   = "vpc-demo-subnet2"
         subnet_ip     = "10.2.1.0/24"
-        subnet_region = "us-central"
+        subnet_region = " "
         description   = "subnet 2 of VPC demo"
       }
 
@@ -25,7 +25,7 @@ vpcs = {
       {
         subnet_name   = "on-prem-subnet1"
         subnet_ip     = "192.168.1.0/24"
-        subnet_region = "us-central"
+        subnet_region = " "
         description   = "subnet 1 for on-prem"
       }
     ]
@@ -34,17 +34,17 @@ vpcs = {
 
 vm_instances = {
   "vpc-demo-instance1" = {
-    zone         = "us-west1-b"
+    zone         = " "
     network_name = "vpc-demo"
     subnetwork   = "vpc-demo-subnet1"
   },
   "vpc-demo-instance2" = {
-    zone         = "us-west1-b"
+    zone         = " "
     network_name = "vpc-demo"
     subnetwork   = "vpc-demo-subnet2"
   },
   "on-prem-instance1" = {
-    zone         = "us-central-b"
+    zone         = " "
     network_name = "on-prem"
     subnetwork   = "on-prem-subnet1"
   }

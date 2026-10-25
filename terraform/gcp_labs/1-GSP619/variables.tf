@@ -30,16 +30,18 @@ variable "vpcs" {
 
 variable "vm_instances" {
   type = map(object({
-    machine_type = string
-    image        = string
+    zone         = string
+    network_name = string
+    subnetwork   = string
+    machine_type = optional(string, "e2-medium")
+    image        = optional(string, "debian-cloud/debian-12")
   }))
-  description = "Map of instances with their respective zones and subnets"
+  description = "Map of VM instances with their respective configurations"
 }
 
-variable "rules" {
-  type = list(object({
-    name                    = string
-	network                 = string
+variable "firewall_rules" {
+  type = map(object({
+    network                 = string
     description             = optional(string, null)
     direction               = optional(string, "INGRESS")
     priority                = optional(number, 1000)
@@ -50,7 +52,7 @@ variable "rules" {
     target_tags             = optional(list(string), null)
     source_service_accounts = optional(list(string), null)
     target_service_accounts = optional(list(string), null)
-    allow = optional(list(object({
+    allows = optional(list(object({
       protocol = string
       ports    = optional(list(string), [])
     })), [])
@@ -59,6 +61,6 @@ variable "rules" {
       ports    = optional(list(string), [])
     })), [])
   }))
-  description = "List of firewall rules definitions"
-  default     = []
+  description = "Map of firewall rules definitions"
+  default     = {}
 }
