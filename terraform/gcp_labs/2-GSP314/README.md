@@ -1,3 +1,5 @@
+For this lab, I use for each variable to deploy vm instances 
+
 GSP314 - Set Up a Google Cloud Network: Challenge Lab
 
 

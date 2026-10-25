@@ -27,17 +27,6 @@ module "mysql_db" {
     ipv4_enabled        = true
     authorized_networks = []
   }
-
-#  ip_configuration = {
-#    ipv4_enabled        = true
-#  
-#    # Authorized Networks configuration
-#     authorized_networks = [
-#       {
-#         name  = "allow-all"
-#         value = "0.0.0.0/0"
-#       }
-#     ]
-#  }
+ }
 }
 

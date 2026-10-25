@@ -1,5 +1,8 @@
 GSP321 Develop your Google Cloud Network: Challenge Lab
 
+In this lab, I created terraform infrasture structure files for each task and required component, with shared terraform and provider file, so I can test and deploy task before moving on to next one.
+
+
 Challenge scenario
 =====================================================================
 As a cloud engineer at Jooli Inc. and recently trained with Google Cloud and Kubernetes, you have been asked to help a new team (Griffin) set up their environment. The team has asked for your help and has done some work, but needs you to complete the work.

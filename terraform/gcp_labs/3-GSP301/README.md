@@ -1,3 +1,5 @@
+This terraform script make use of local variable to quickly deploy infrastructure with tfvar file
+
 GSP301 : Deploy a Compute Instance with a Remote Startup Script: Challenge Lab
 
 Overview
